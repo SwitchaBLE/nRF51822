@@ -1,7 +1,7 @@
 nRF51822
 ========
 
-BLE application for [SwitchaBLE][switchable.github.io] device
+BLE application for [SwitchaBLE]{switchable.github.io} device
 -------------------------------------
 
 
