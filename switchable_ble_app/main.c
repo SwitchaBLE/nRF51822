@@ -48,7 +48,7 @@
 #define HW_REVISION                     "1"                                         /**< Hardware Revision. Will be passed to Device Information Service. */
 #define SW_VERSION                      "02112013"                                  /**< Software Version. Will be passed to Device Information Service. */
 
-#define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
+#define APP_ADV_INTERVAL                8000                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED       /**< The advertising timeout (in units of seconds). */
 
 // YOUR_JOB: Modify these according to requirements.
@@ -310,8 +310,8 @@ static void services_init(void)
     uint32_t err_code;
     ble_switchable_init_t init;
     ble_dis_init_t dis_init;
-    
-    init.led_write_handler = led_write_handler;
+
+    init.light_write_handler = led_write_handler;
     
     err_code = ble_switchable_init(&m_switchable, &init);
     APP_ERROR_CHECK(err_code);
