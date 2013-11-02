@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 #include "nordic_common.h"
 #include "nrf.h"
 #include "app_error.h"
@@ -32,6 +33,8 @@
 #include "app_button.h"
 #include "ble_debug_assert_handler.h"
 #include "ble_switchable.h"
+#include "ble_dis.h"
+
 
 #define WAKEUP_BUTTON_PIN               EVAL_BOARD_BUTTON_0                            /**< Button used to wake up the application. */
 #define LEDBUTTON_LED_PIN_NO            EVAL_BOARD_LED_0
@@ -39,9 +42,14 @@
 
 
 #define DEVICE_NAME                     "SwitchaBLE"                           		/**< Name of device. Will be included in the advertising data. */
+#define MANUFACTURER_NAME               "SwitchaBLE"                                /**< Manufacturer. Will be passed to Device Information Service. */
+#define MODEL_NUM                       "0000000001"                                /**< Model Number. Will be passed to Device Information Service. */ 
+#define SERIAL_NUM                      "1234567890"                                /**< Serial Number. Will be passed to Device Information Service. */
+#define HW_REVISION                     "1"                                         /**< Hardware Revision. Will be passed to Device Information Service. */
+#define SW_VERSION                      "02112013"                                  /**< Software Version. Will be passed to Device Information Service. */
 
 #define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS      30                                         /**< The advertising timeout (in units of seconds). */
+#define APP_ADV_TIMEOUT_IN_SECONDS      BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED       /**< The advertising timeout (in units of seconds). */
 
 // YOUR_JOB: Modify these according to requirements.
 #define APP_TIMER_PRESCALER             0                                           /**< Value of the RTC1 PRESCALER register. */
@@ -77,6 +85,69 @@ static ble_switchable_t                        m_switchable;
 
 #define SCHED_MAX_EVENT_DATA_SIZE       sizeof(app_timer_event_t)                   /**< Maximum size of scheduler events. Note that scheduler BLE stack events do not contain any data, as the events are being pulled from the stack in the event handler. */
 #define SCHED_QUEUE_SIZE                10                                          /**< Maximum number of events in the scheduler queue. */
+
+// Values for RTC
+//#define GPIO_TOGGLE_TICK_EVENT    (8)                                     /**< Pin number to toggle when there is a tick event in RTC. */
+//#define GPIO_TOGGLE_COMPARE_EVENT (9)                                     /**< Pin number to toggle when there is compare event in RTC. */
+#define LFCLK_FREQUENCY           (32768UL)                               /**< LFCLK frequency in Hertz, constant. */
+#define RTC_FREQUENCY             (8UL)                                   /**< Required RTC working clock RTC_FREQUENCY Hertz. Changable. */
+#define COMPARE_COUNTERTIME       (3UL)                                   /**< Get Compare event COMPARE_TIME seconds after the counter starts from 0. */
+#define COUNTER_PRESCALER         ((LFCLK_FREQUENCY/RTC_FREQUENCY) - 1)   /* f = LFCLK/(prescaler + 1) */
+
+// /** @brief Function starting the internal LFCLK XTAL oscillator.
+//  */
+// static void lfclk_config(void)
+// {
+//     NRF_CLOCK->LFCLKSRC             = (CLOCK_LFCLKSRC_SRC_Xtal << CLOCK_LFCLKSRC_SRC_Pos);
+//     NRF_CLOCK->EVENTS_LFCLKSTARTED  = 0;
+//     NRF_CLOCK->TASKS_LFCLKSTART     = 1;
+//     while (NRF_CLOCK->EVENTS_LFCLKSTARTED == 0)
+//     {
+//         //Do nothing.
+//     }
+//     NRF_CLOCK->EVENTS_LFCLKSTARTED = 0;
+// }
+
+
+// /** @brief Function for configuring the RTC with TICK to 100Hz and COMPARE0 to 10 sec.
+//  */
+// static void rtc_config(void)
+// {
+//     NVIC_EnableIRQ(RTC0_IRQn);                                      // Enable Interrupt for the RTC in the core.
+//     NRF_RTC0->PRESCALER     = COUNTER_PRESCALER;                    // Set prescaler to a TICK of RTC_FREQUENCY.
+//     NRF_RTC0->CC[0]         = COMPARE_COUNTERTIME * RTC_FREQUENCY;  // Compare0 after approx COMPARE_COUNTERTIME seconds.
+
+//     // Enable TICK event and TICK interrupt:
+//     NRF_RTC0->EVTENSET      = RTC_EVTENSET_TICK_Msk;
+//     NRF_RTC0->INTENSET      = RTC_INTENSET_TICK_Msk;
+
+//     // Enable COMPARE0 event and COMPARE0 interrupt:
+//     NRF_RTC0->EVTENSET      = RTC_EVTENSET_COMPARE0_Msk;
+//     NRF_RTC0->INTENSET      = RTC_INTENSET_COMPARE0_Msk;
+// }
+
+
+// /** @brief: Function for handling the RTC0 interrupts.
+//  * Triggered on TICK and COMPARE0 match.
+//  */
+// void RTC0_IRQHandler()
+// {
+//     if ((NRF_RTC0->EVENTS_TICK != 0) && 
+//         ((NRF_RTC0->INTENSET & RTC_INTENSET_TICK_Msk) != 0))
+//     {
+//         NRF_RTC0->EVENTS_TICK = 0;
+//         //nrf_gpio_pin_toggle(GPIO_TOGGLE_TICK_EVENT);
+//     }
+    
+//     if ((NRF_RTC0->EVENTS_COMPARE[0] != 0) && 
+//         ((NRF_RTC0->INTENSET & RTC_INTENSET_COMPARE0_Msk) != 0))
+//     {
+//         NRF_RTC0->EVENTS_COMPARE[0] = 0;
+//         //nrf_gpio_pin_write(GPIO_TOGGLE_COMPARE_EVENT, 1);
+//     }
+// }
+
+
 
 /**@brief Function for error handling, which is called when an error has occurred. 
  *
@@ -180,7 +251,7 @@ static void advertising_init(void)
     uint32_t      err_code;
     ble_advdata_t advdata;
     ble_advdata_t scanrsp;
-    uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
+    uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
     
     ble_uuid_t adv_uuids[] = {{SWITCHABLE_UUID_SERVICE, m_switchable.uuid_type}};
 
@@ -238,10 +309,26 @@ static void services_init(void)
 {
     uint32_t err_code;
     ble_switchable_init_t init;
+    ble_dis_init_t dis_init;
     
     init.led_write_handler = led_write_handler;
     
     err_code = ble_switchable_init(&m_switchable, &init);
+    APP_ERROR_CHECK(err_code);
+
+    // Initialize Device Information Service.
+    memset(&dis_init, 0, sizeof(dis_init));
+    
+    ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, (char *)MANUFACTURER_NAME);
+    ble_srv_ascii_to_utf8(&dis_init.model_num_str, (char *)MODEL_NUM);
+    ble_srv_ascii_to_utf8(&dis_init.serial_num_str, (char *)SERIAL_NUM);
+    ble_srv_ascii_to_utf8(&dis_init.hw_rev_str, (char *)HW_REVISION);
+    ble_srv_ascii_to_utf8(&dis_init.sw_rev_str, (char *)SW_VERSION);
+
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&dis_init.dis_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&dis_init.dis_attr_md.write_perm);
+
+    err_code = ble_dis_init(&dis_init);
     APP_ERROR_CHECK(err_code);
 }
 
