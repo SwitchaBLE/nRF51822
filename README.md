@@ -7,9 +7,11 @@ BLE application for [SwitchaBLE](http://switchable.github.io) device
 
 Includes Custom BLE Service and embedded code for the nRF51822 ic
 
-###Working (11/1/2013):
+-------------------------------------
+###Working (11/2/2013):
 + Android/iOS can find/connect to "SwitchaBLE" device
 + LED can be toggled on/off
++ Device Info Service
 
 ###To Do:
 + Alarm Characteristics
