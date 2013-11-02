@@ -19,7 +19,7 @@
 
 /**@brief Connect event handler.
  *
- * @param[in]   p_switchable       LEDButton Service structure.
+ * @param[in]   p_switchable       LightButton Service structure.
  * @param[in]   p_ble_evt   Event received from the BLE stack.
  */
 static void on_connect(ble_switchable_t * p_switchable, ble_evt_t * p_ble_evt)
@@ -30,7 +30,7 @@ static void on_connect(ble_switchable_t * p_switchable, ble_evt_t * p_ble_evt)
 
 /**@brief Disconnect event handler.
  *
- * @param[in]   p_switchable       LEDButton Service structure.
+ * @param[in]   p_switchable       LightButton Service structure.
  * @param[in]   p_ble_evt   Event received from the BLE stack.
  */
 static void on_disconnect(ble_switchable_t * p_switchable, ble_evt_t * p_ble_evt)
@@ -42,18 +42,18 @@ static void on_disconnect(ble_switchable_t * p_switchable, ble_evt_t * p_ble_evt
 
 /**@brief Write event handler.
  *
- * @param[in]   p_switchable       LEDButton Service structure.
+ * @param[in]   p_switchable       LightButton Service structure.
  * @param[in]   p_ble_evt   Event received from the BLE stack.
  */
 static void on_write(ble_switchable_t * p_switchable, ble_evt_t * p_ble_evt)
 {
     ble_gatts_evt_write_t * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
     
-   if ((p_evt_write->handle == p_switchable->led_char_handles.value_handle) &&
+   if ((p_evt_write->handle == p_switchable->light_char_handles.value_handle) &&
        (p_evt_write->len == 1) &&
-       (p_switchable->led_write_handler != NULL))
+       (p_switchable->light_write_handler != NULL))
    {
-       p_switchable->led_write_handler(p_switchable, p_evt_write->data[0]);
+       p_switchable->light_write_handler(p_switchable, p_evt_write->data[0]);
    }
 }
 
@@ -80,14 +80,14 @@ void ble_switchable_on_ble_evt(ble_switchable_t * p_switchable, ble_evt_t * p_bl
 }
 
 
-/**@brief Add LED state characteristic.
+/**@brief Add Light state characteristic.
  *
- * @param[in]   p_switchable        LEDButton Service structure.
+ * @param[in]   p_switchable        LightButton Service structure.
  * @param[in]   p_switchable_init   Information needed to initialize the service.
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
-static uint32_t led_char_add(ble_switchable_t * p_switchable, const ble_switchable_init_t * p_switchable_init)
+static uint32_t light_char_add(ble_switchable_t * p_switchable, const ble_switchable_init_t * p_switchable_init)
 {
     ble_gatts_char_md_t char_md;
     ble_gatts_attr_t    attr_char_value;
@@ -106,7 +106,7 @@ static uint32_t led_char_add(ble_switchable_t * p_switchable, const ble_switchab
     char_md.p_sccd_md         = NULL;
     
     ble_uuid.type = p_switchable->uuid_type;
-    ble_uuid.uuid = SWITCHABLE_UUID_LED_CHAR;
+    ble_uuid.uuid = SWITCHABLE_UUID_LIGHT_CHAR;
     
     memset(&attr_md, 0, sizeof(attr_md));
 
@@ -129,12 +129,12 @@ static uint32_t led_char_add(ble_switchable_t * p_switchable, const ble_switchab
     
     return sd_ble_gatts_characteristic_add(p_switchable->service_handle, &char_md,
                                                &attr_char_value,
-                                               &p_switchable->led_char_handles);
+                                               &p_switchable->light_char_handles);
 }
 
 /**@brief Add Button state characteristic.
  *
- * @param[in]   p_switchable        LEDButton Service structure.
+ * @param[in]   p_switchable        LightButton Service structure.
  * @param[in]   p_switchable_init   Information needed to initialize the service.
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
@@ -200,7 +200,7 @@ uint32_t ble_switchable_init(ble_switchable_t * p_switchable, const ble_switchab
 
     // Initialize service structure
     p_switchable->conn_handle       = BLE_CONN_HANDLE_INVALID;
-    p_switchable->led_write_handler = p_switchable_init->led_write_handler;
+    p_switchable->light_write_handler = p_switchable_init->light_write_handler;
     
     // Add base UUID to softdevice's internal list. 
     ble_uuid128_t base_uuid = SWITCHABLE_UUID_BASE;
@@ -225,7 +225,7 @@ uint32_t ble_switchable_init(ble_switchable_t * p_switchable, const ble_switchab
         return err_code;
     }
     
-    err_code  = led_char_add(p_switchable, p_switchable_init);
+    err_code  = light_char_add(p_switchable, p_switchable_init);
     if (err_code != NRF_SUCCESS)
     {
         return err_code;

@@ -41,22 +41,21 @@
 #include "ble_srv_common.h"
 
 #define SWITCHABLE_UUID_BASE {0x26, 0xC1, 0xE1, 0x5C, 0xFB, 0x09, 0x37, 0x0D, 0x9D, 0x92, 0x47, 0x1B, 0x00, 0x00, 0x00, 0x00}
-//#define SWITCHABLE_UUID_BASE {0x23, 0xD1, 0xBC, 0xEA, 0x5F, 0x78, 0x23, 0x15, 0xDE, 0xEF, 0x12, 0x12, 0x00, 0x00, 0x00, 0x00}
 #define SWITCHABLE_UUID_SERVICE 0x6D59
-#define SWITCHABLE_UUID_LED_CHAR 0x6D5A 
+#define SWITCHABLE_UUID_LIGHT_CHAR 0x6D5A 
 #define SWITCHABLE_UUID_BUTTON_CHAR 0x6D5B
 
 // Forward declaration of the ble_switchable_t type. 
 typedef struct ble_switchable_s ble_switchable_t;
 
 /**@brief SwitchaBLE Service event handler type. */
-typedef void (*ble_switchable_led_write_handler_t) (ble_switchable_t * p_switchable, uint8_t new_state);
+typedef void (*ble_switchable_light_write_handler_t) (ble_switchable_t * p_switchable, uint8_t new_state);
 
 /**@brief SwitchaBLE Service init structure. This contains all options and data needed for
  *        initialization of the service.*/
 typedef struct
 {
-    ble_switchable_led_write_handler_t   led_write_handler;                   
+    ble_switchable_light_write_handler_t   light_write_handler;                   
 } ble_switchable_init_t;
 
 
@@ -64,13 +63,15 @@ typedef struct
 typedef struct ble_switchable_s
 {         
     uint16_t                     service_handle;                 
-    ble_gatts_char_handles_t     led_char_handles;          
-    ble_gatts_char_handles_t     button_char_handles;          
+    ble_gatts_char_handles_t     light_char_handles;          
+    ble_gatts_char_handles_t     button_char_handles;
+    ble_gatts_char_handles_t	 alarm1_char_handles;
+    ble_gatts_char_handles_t	 alarm2_char_handles;          
     uint8_t                      uuid_type;
-    uint8_t                      current_led_state;             
+    uint8_t                      current_light_state;             
     uint16_t                     conn_handle;  
     bool                         is_notifying;
-    ble_switchable_led_write_handler_t  led_write_handler;
+    ble_switchable_light_write_handler_t  light_write_handler;
 } ble_switchable_t;
 
 
