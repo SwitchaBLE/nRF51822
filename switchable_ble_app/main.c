@@ -37,8 +37,8 @@
 
 
 #define WAKEUP_BUTTON_PIN               EVAL_BOARD_BUTTON_0                            /**< Button used to wake up the application. */
-#define LEDBUTTON_LED_PIN_NO            EVAL_BOARD_LED_0
-#define LEDBUTTON_BUTTON_PIN_NO         EVAL_BOARD_BUTTON_1
+#define LEDBUTTON_LED_PIN_NO            21
+#define LEDBUTTON_BUTTON_PIN_NO         22
 
 
 #define DEVICE_NAME                     "SwitchaBLE"                           		/**< Name of device. Will be included in the advertising data. */
@@ -48,7 +48,7 @@
 #define HW_REVISION                     "1"                                         /**< Hardware Revision. Will be passed to Device Information Service. */
 #define SW_VERSION                      "02112013"                                  /**< Software Version. Will be passed to Device Information Service. */
 
-#define APP_ADV_INTERVAL                8000                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
+#define APP_ADV_INTERVAL                1000                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED       /**< The advertising timeout (in units of seconds). */
 
 // YOUR_JOB: Modify these according to requirements.
@@ -274,7 +274,7 @@ static void advertising_init(void)
 /**@brief Function for handling a write to the LED characteristic of the LED Button service. 
  * @detail A pointer to this function is passed to the service in its init structure. 
  */
-static void led_write_handler(ble_switchable_t * p_switchable, uint8_t led_state)
+static void light_write_handler(ble_switchable_t * p_switchable, uint8_t led_state)
 {
 
    
@@ -287,18 +287,18 @@ static void led_write_handler(ble_switchable_t * p_switchable, uint8_t led_state
     {
         nrf_gpio_pin_clear(LEDBUTTON_LED_PIN_NO);
 				
-//			static uint8_t send_push = 1;
-//				uint32_t err_code;
-//    
+/*			static uint8_t send_push = 1;
+				uint32_t err_code;
+   
 
-//				err_code = ble_switchable_on_button_change(&m_switchable, send_push);
-//				if (err_code != NRF_SUCCESS &&
-//						err_code != BLE_ERROR_INVALID_CONN_HANDLE &&
-//						err_code != NRF_ERROR_INVALID_STATE)
-//				{
-//						APP_ERROR_CHECK(err_code);
-//				}
-//				send_push = !send_push;
+				err_code = ble_switchable_on_button_change(&m_switchable, send_push);
+				if (err_code != NRF_SUCCESS &&
+						err_code != BLE_ERROR_INVALID_CONN_HANDLE &&
+						err_code != NRF_ERROR_INVALID_STATE)
+				{
+						APP_ERROR_CHECK(err_code);
+				}
+				send_push = !send_push;*/
     }
 }
 
@@ -311,7 +311,7 @@ static void services_init(void)
     ble_switchable_init_t init;
     ble_dis_init_t dis_init;
 
-    init.light_write_handler = led_write_handler;
+    init.light_write_handler = light_write_handler;
     
     err_code = ble_switchable_init(&m_switchable, &init);
     APP_ERROR_CHECK(err_code);
