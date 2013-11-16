@@ -43,11 +43,11 @@
 #define SWITCHABLE_UUID_BASE {0x26, 0xC1, 0xE1, 0x5C, 0xFB, 0x09, 0x37, 0x0D, 0x9D, 0x92, 0x47, 0x1B, 0x00, 0x00, 0x00, 0x00}
 #define SWITCHABLE_UUID_SERVICE       0x6D59
 #define SWITCHABLE_UUID_LIGHT_CHAR    0x6D5A    // Read, Write
-#define SWITCHABLE_UUID_ALRM1_CHAR    0x6D5B    // Read, Notify
-#define SWITCHABLE_UUID_TIMER1_CHAR   0x6D5C    // Read, Write
+#define SWITCHABLE_UUID_ALRM1_CHAR    0x6D5C    // Read, Notify
+//#define SWITCHABLE_UUID_TIMER1_CHAR   0x6D5C    // Read, Write
 #define SWITCHABLE_UUID_ALRM2_CHAR    0x6D5D    // Read, Notify
 #define SWITCHABLE_UUID_TIMER2_CHAR   0x6D5E    // Read, Write
-#define SWITCHABLE_UUID_BUTTON_CHAR   0x6D5F
+#define SWITCHABLE_UUID_BUTTON_CHAR   0x6D5B
 
 // Forward declaration of the ble_switchable_t type. 
 typedef struct ble_switchable_s ble_switchable_t;

@@ -487,6 +487,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\Source\ble\ble_error_log.c</FilePath>
             </File>
+            <File>
+              <FileName>ble_dis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\Source\ble\ble_services\ble_dis.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
@@ -971,6 +976,11 @@
               <FileName>ble_error_log.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\Source\ble\ble_error_log.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_dis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\Source\ble\ble_services\ble_dis.c</FilePath>
             </File>
           </Files>
         </Group>

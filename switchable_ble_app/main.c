@@ -48,7 +48,7 @@
 #define HW_REVISION                     "1"                                         /**< Hardware Revision. Will be passed to Device Information Service. */
 #define SW_VERSION                      "02112013"                                  /**< Software Version. Will be passed to Device Information Service. */
 
-#define APP_ADV_INTERVAL                20                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
+#define APP_ADV_INTERVAL                1000                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED       /**< The advertising timeout (in units of seconds). */
 
 // YOUR_JOB: Modify these according to requirements.
@@ -87,12 +87,12 @@ static ble_switchable_t                 m_switchable;
 #define SCHED_QUEUE_SIZE                10                                          /**< Maximum number of events in the scheduler queue. */
 
 
-#define TIMER_MS                        1000
-#define TIMER_TICKS                     APP_TIMER_TICKS(TIMER_MS, PRESCALER)
+//#define TIMER_MS                        1000
+//#define TIMER_TICKS                     APP_TIMER_TICKS(TIMER_MS, PRESCALER)
 
 // alloc timer object
 
-static app_timer_id_t                   alarmTimer;
+//static app_timer_id_t                   alarmTimer;
 
 // #define LFCLK_FREQUENCY           (32768UL)                               /**< LFCLK frequency in Hertz, constant. */
 // #define RTC_FREQUENCY             (8UL)                                   /**< Required RTC working clock RTC_FREQUENCY Hertz. Changable. */
@@ -610,7 +610,7 @@ static void power_manage(void)
  */
 int main(void)
 {
-    uint32_t error_code;
+//    uint32_t error_code;
 
     // Initialize
     leds_init();
@@ -626,12 +626,12 @@ int main(void)
     sec_params_init();
 
     // create Timeer with 1 second tick
-    error_code = app_timer_create(&alarmTimer, APP_TIMER_MODE_REPEATED, timer_one_sec);
-    APP_ERROR_CHECK(error_code);
+   // error_code = app_timer_create(&alarmTimer, APP_TIMER_MODE_REPEATED, timer_one_sec);
+    //APP_ERROR_CHECK(error_code);
 
     // start timer
-    error_code = app_timer_start(alarmTimer, TIMER_TICKS, NULL);
-    APP_ERROR_CHECK(err_code)
+    //error_code = app_timer_start(alarmTimer, TIMER_TICKS, NULL);
+    //APP_ERROR_CHECK(err_code)
     
     // Start execution
     advertising_start();
