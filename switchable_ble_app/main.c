@@ -48,7 +48,7 @@
 #define HW_REVISION                     "1"                                         /**< Hardware Revision. Will be passed to Device Information Service. */
 #define SW_VERSION                      "02112013"                                  /**< Software Version. Will be passed to Device Information Service. */
 
-#define APP_ADV_INTERVAL                1000                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
+#define APP_ADV_INTERVAL                20                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED       /**< The advertising timeout (in units of seconds). */
 
 // YOUR_JOB: Modify these according to requirements.
@@ -81,18 +81,23 @@
 
 static ble_gap_sec_params_t             m_sec_params;                               /**< Security requirements for this application. */
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
-static ble_switchable_t                        m_switchable;
+static ble_switchable_t                 m_switchable;
 
 #define SCHED_MAX_EVENT_DATA_SIZE       sizeof(app_timer_event_t)                   /**< Maximum size of scheduler events. Note that scheduler BLE stack events do not contain any data, as the events are being pulled from the stack in the event handler. */
 #define SCHED_QUEUE_SIZE                10                                          /**< Maximum number of events in the scheduler queue. */
 
-// Values for RTC
-//#define GPIO_TOGGLE_TICK_EVENT    (8)                                     /**< Pin number to toggle when there is a tick event in RTC. */
-//#define GPIO_TOGGLE_COMPARE_EVENT (9)                                     /**< Pin number to toggle when there is compare event in RTC. */
-#define LFCLK_FREQUENCY           (32768UL)                               /**< LFCLK frequency in Hertz, constant. */
-#define RTC_FREQUENCY             (8UL)                                   /**< Required RTC working clock RTC_FREQUENCY Hertz. Changable. */
-#define COMPARE_COUNTERTIME       (3UL)                                   /**< Get Compare event COMPARE_TIME seconds after the counter starts from 0. */
-#define COUNTER_PRESCALER         ((LFCLK_FREQUENCY/RTC_FREQUENCY) - 1)   /* f = LFCLK/(prescaler + 1) */
+
+#define TIMER_MS                        1000
+#define TIMER_TICKS                     APP_TIMER_TICKS(TIMER_MS, PRESCALER)
+
+// alloc timer object
+
+static app_timer_id_t                   alarmTimer;
+
+// #define LFCLK_FREQUENCY           (32768UL)                               /**< LFCLK frequency in Hertz, constant. */
+// #define RTC_FREQUENCY             (8UL)                                   /**< Required RTC working clock RTC_FREQUENCY Hertz. Changable. */
+// #define COMPARE_COUNTERTIME       (3UL)                                   /**< Get Compare event COMPARE_TIME seconds after the counter starts from 0. */
+// #define COUNTER_PRESCALER         ((LFCLK_FREQUENCY/RTC_FREQUENCY) - 1)   /* f = LFCLK/(prescaler + 1) */
 
 // /** @brief Function starting the internal LFCLK XTAL oscillator.
 //  */
@@ -185,6 +190,12 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
  * @param[in]   line_num   Line number of the failing ASSERT call.
  * @param[in]   file_name  File name of the failing ASSERT call.
  */
+
+void timer_one_sec(void *nil)
+{
+    // decrement timers here
+}
+
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
     app_error_handler(DEAD_BEEF, line_num, p_file_name);
@@ -274,32 +285,30 @@ static void advertising_init(void)
 /**@brief Function for handling a write to the LED characteristic of the LED Button service. 
  * @detail A pointer to this function is passed to the service in its init structure. 
  */
-static void light_write_handler(ble_switchable_t * p_switchable, uint8_t led_state)
+static void light_write_handler(ble_switchable_t * p_switchable, uint8_t light_state)
 {
-
+		uint32_t err_code;
    
          
-    if (led_state)
+    if (light_state)
     {
         nrf_gpio_pin_set(LEDBUTTON_LED_PIN_NO);
     }
     else
     {
         nrf_gpio_pin_clear(LEDBUTTON_LED_PIN_NO);
-				
-/*			static uint8_t send_push = 1;
-				uint32_t err_code;
-   
-
-				err_code = ble_switchable_on_button_change(&m_switchable, send_push);
-				if (err_code != NRF_SUCCESS &&
-						err_code != BLE_ERROR_INVALID_CONN_HANDLE &&
-						err_code != NRF_ERROR_INVALID_STATE)
-				{
-						APP_ERROR_CHECK(err_code);
-				}
-				send_push = !send_push;*/
     }
+
+    static uint8_t send_push = 1;
+
+    err_code = ble_switchable_on_button_change(&m_switchable, light_state);
+    if (err_code != NRF_SUCCESS &&
+            err_code != BLE_ERROR_INVALID_CONN_HANDLE &&
+            err_code != NRF_ERROR_INVALID_STATE)
+    {
+            APP_ERROR_CHECK(err_code);
+    }
+    send_push = !send_push;
 }
 
 
@@ -601,6 +610,8 @@ static void power_manage(void)
  */
 int main(void)
 {
+    uint32_t error_code;
+
     // Initialize
     leds_init();
     timers_init();
@@ -613,6 +624,14 @@ int main(void)
     advertising_init();
     conn_params_init();
     sec_params_init();
+
+    // create Timeer with 1 second tick
+    error_code = app_timer_create(&alarmTimer, APP_TIMER_MODE_REPEATED, timer_one_sec);
+    APP_ERROR_CHECK(error_code);
+
+    // start timer
+    error_code = app_timer_start(alarmTimer, TIMER_TICKS, NULL);
+    APP_ERROR_CHECK(err_code)
     
     // Start execution
     advertising_start();

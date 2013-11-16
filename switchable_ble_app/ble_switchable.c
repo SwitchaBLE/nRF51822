@@ -17,6 +17,7 @@
 #include "app_util.h"
 
 
+
 /**@brief Connect event handler.
  *
  * @param[in]   p_switchable       LightButton Service structure.
@@ -132,6 +133,69 @@ static uint32_t light_char_add(ble_switchable_t * p_switchable, const ble_switch
                                                &p_switchable->light_char_handles);
 }
 
+
+/**@brief Add Alarm1 characteristic.
+ *
+ * @param[in]   p_switchable        SwitchaBLE Service structure.
+ * @param[in]   p_switchable_init   Information needed to initialize the service.
+ *
+ * @return      NRF_SUCCESS on success, otherwise an error code.
+ */
+static uint32_t alarm1_char_add(ble_switchable_t * p_switchable, const ble_switchable_init_t * p_switchable_init)
+{
+    ble_gatts_char_md_t char_md;
+    ble_gatts_attr_md_t cccd_md;
+    ble_gatts_attr_t    attr_char_value;
+    ble_uuid_t          ble_uuid;
+    ble_gatts_attr_md_t attr_md;
+    
+
+    memset(&cccd_md, 0, sizeof(cccd_md));
+
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.write_perm);
+    
+    cccd_md.vloc = BLE_GATTS_VLOC_STACK;
+    
+    memset(&char_md, 0, sizeof(char_md));
+    
+    char_md.char_props.read   = 1;
+    char_md.char_props.write  = 1;
+    char_md.char_props.notify = 1;
+    char_md.p_char_user_desc  = NULL;
+    char_md.p_char_pf         = NULL;
+    char_md.p_user_desc_md    = NULL;
+    char_md.p_cccd_md         = &cccd_md;
+    char_md.p_sccd_md         = NULL;
+    
+    ble_uuid.type = p_switchable->uuid_type;
+    ble_uuid.uuid = SWITCHABLE_UUID_ALRM1_CHAR;
+
+    memset(&attr_md, 0, sizeof(attr_md));
+
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.write_perm);
+    
+    attr_md.vloc       = BLE_GATTS_VLOC_STACK;
+    attr_md.rd_auth    = 0;
+    attr_md.wr_auth    = 0;
+    attr_md.vlen       = 0;
+    
+    memset(&attr_char_value, 0, sizeof(attr_char_value));
+
+    attr_char_value.p_uuid       = &ble_uuid;
+    attr_char_value.p_attr_md    = &attr_md;
+    attr_char_value.init_len     = sizeof(uint8_t);
+    attr_char_value.init_offs    = 0;
+    attr_char_value.max_len      = sizeof(uint8_t);
+    attr_char_value.p_value      = NULL;
+    
+    return sd_ble_gatts_characteristic_add(p_switchable->service_handle, &char_md,
+                                               &attr_char_value,
+                                               &p_switchable->alarm1_char_handles);
+}
+
+
 /**@brief Add Button state characteristic.
  *
  * @param[in]   p_switchable        LightButton Service structure.
@@ -238,6 +302,7 @@ uint32_t ble_switchable_on_button_change(ble_switchable_t * p_switchable, uint8_
 {
     ble_gatts_hvx_params_t params;
     uint16_t len = sizeof(button_state);
+    //uint8_t test_byte = 0xFF;
     
     memset(&params, 0, sizeof(params));
     params.type = BLE_GATT_HVX_NOTIFICATION;
@@ -248,3 +313,30 @@ uint32_t ble_switchable_on_button_change(ble_switchable_t * p_switchable, uint8_
     return sd_ble_gatts_hvx(p_switchable->conn_handle, &params);    
 }
 
+uint32_t ble_switchable_on_alarm1_change(ble_switchable_t * p_switchable, uint8_t button_state)
+{
+    ble_gatts_hvx_params_t params;
+    uint16_t len = sizeof(button_state);
+    
+    memset(&params, 0, sizeof(params));
+    params.type = BLE_GATT_HVX_NOTIFICATION;
+    params.handle = p_switchable->alarm1_char_handles.value_handle;
+    params.p_data = &button_state;
+    params.p_len = &len;
+    
+    return sd_ble_gatts_hvx(p_switchable->conn_handle, &params);    
+}
+
+uint32_t ble_switchable_on_light_change(ble_switchable_t * p_switchable, uint8_t light_state)
+{
+    ble_gatts_hvx_params_t params;
+    uint16_t len = sizeof(light_state);
+    
+    memset(&params, 0, sizeof(params));
+    params.type = BLE_GATT_HVX_NOTIFICATION;
+    params.handle = p_switchable->alarm1_char_handles.value_handle;
+    params.p_data = &light_state;
+    params.p_len = &len;
+    
+    return sd_ble_gatts_hvx(p_switchable->conn_handle, &params);    
+}
