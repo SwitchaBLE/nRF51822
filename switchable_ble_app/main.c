@@ -39,7 +39,7 @@
 #define WAKEUP_BUTTON_PIN               EVAL_BOARD_BUTTON_0                            /**< Button used to wake up the application. */
 #define LEDBUTTON_LED_PIN_NO            5
 #define LEDBUTTON_BUTTON_PIN_NO         22
-#define LED_TIMER                       23
+#define LED_TIMER                       29
 
 
 #define DEVICE_NAME                     "SwitchaBLE"                           			/**< Name of device. Will be included in the advertising data. */
@@ -138,6 +138,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 void timer_one_sec(void *nil)
 {
     nrf_gpio_pin_toggle(LED_TIMER);
+		nrf_gpio_pin_toggle(LEDBUTTON_LED_PIN_NO);
 }
 
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
@@ -226,32 +227,56 @@ static void advertising_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
+bool is_light_on = 0;
+bool is_light_pulsed = 0;
 
-/**@brief Function for handling a write to the LED characteristic of the LED Button service. 
+/**@brief Function for handling a write to the LED characteristic of the SwitchaBLE service. 
  * @detail A pointer to this function is passed to the service in its init structure. 
  */
 static void light_write_handler(ble_switchable_t * p_switchable, uint8_t light_state)
 {
-		uint32_t err_code, error_code;
+	uint32_t err_code, error_code;
 
+    // turn light on
     if (light_state == 0x01)
-    {
-      nrf_gpio_pin_clear(LEDBUTTON_LED_PIN_NO);  
-			
+    { 
+        if (is_light_pulsed) 
+        {
+            is_light_pulsed = false;
+            // stop timer
+            error_code = app_timer_stop(alarmTimer);
+            APP_ERROR_CHECK(error_code);  
+        }
 
+        nrf_gpio_pin_clear(LEDBUTTON_LED_PIN_NO);
+        nrf_gpio_pin_clear(LED_TIMER);  
+			
     }
-    else if(light_state ==0x08)
-		{
-				        // start timer
-        error_code = app_timer_start(alarmTimer, TIMER_TICKS, NULL);
-        APP_ERROR_CHECK(error_code);
-		}
-		else
+    // pulse light
+    else if(light_state == 0x08)
+	{
+        if (!is_light_pulsed) {
+            is_light_pulsed = true;
+            // start timer
+            error_code = app_timer_start(alarmTimer, TIMER_TICKS, NULL);
+            APP_ERROR_CHECK(error_code);  
+        }
+        
+	}
+	else
     {
+        
+        if (is_light_pulsed) 
+        {
+            is_light_pulsed = false;
+            // stop timer
+            error_code = app_timer_stop(alarmTimer);
+            APP_ERROR_CHECK(error_code);  
+        }
+
+        // ensure light is off
         nrf_gpio_pin_set(LEDBUTTON_LED_PIN_NO);
-        // stop timer
-        error_code = app_timer_stop(alarmTimer);
-        APP_ERROR_CHECK(error_code);
+        nrf_gpio_pin_set(LED_TIMER);
     }
 
 //    static uint8_t send_push = 1;
