@@ -39,9 +39,10 @@
 #define WAKEUP_BUTTON_PIN               EVAL_BOARD_BUTTON_0                            /**< Button used to wake up the application. */
 #define LEDBUTTON_LED_PIN_NO            21
 #define LEDBUTTON_BUTTON_PIN_NO         22
+#define LED_TIMER                       23
 
 
-#define DEVICE_NAME                     "SwitchaBLE"                           		/**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                     "SwitchaBLE"                           			/**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME               "SwitchaBLE"                                /**< Manufacturer. Will be passed to Device Information Service. */
 #define MODEL_NUM                       "0000000001"                                /**< Model Number. Will be passed to Device Information Service. */ 
 #define SERIAL_NUM                      "1234567890"                                /**< Serial Number. Will be passed to Device Information Service. */
@@ -51,9 +52,8 @@
 #define APP_ADV_INTERVAL                1000                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED       /**< The advertising timeout (in units of seconds). */
 
-// YOUR_JOB: Modify these according to requirements.
 #define APP_TIMER_PRESCALER             0                                           /**< Value of the RTC1 PRESCALER register. */
-#define APP_TIMER_MAX_TIMERS            2                                           /**< Maximum number of simultaneously created timers. */
+#define APP_TIMER_MAX_TIMERS            3                                           /**< Maximum number of simultaneously created timers. */
 #define APP_TIMER_OP_QUEUE_SIZE         4                                           /**< Size of timer operation queues. */
 
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(500, UNIT_1_25_MS)            /**< Minimum acceptable connection interval (0.5 seconds). */
@@ -65,7 +65,7 @@
 #define NEXT_CONN_PARAMS_UPDATE_DELAY   APP_TIMER_TICKS(5000, APP_TIMER_PRESCALER)  /**< Time between each call to sd_ble_gap_conn_param_update after the first (5 seconds). */
 #define MAX_CONN_PARAMS_UPDATE_COUNT    3                                           /**< Number of attempts before giving up the connection parameter negotiation. */
 
-#define APP_GPIOTE_MAX_USERS            1                                           /**< Maximum number of users of the GPIOTE handler. */
+#define APP_GPIOTE_MAX_USERS            2                                           /**< Maximum number of users of the GPIOTE handler. */
 
 #define BUTTON_DETECTION_DELAY          APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)    /**< Delay from a GPIOTE event until a button is reported as pushed (in number of timer ticks). */
 
@@ -87,70 +87,14 @@ static ble_switchable_t                 m_switchable;
 #define SCHED_QUEUE_SIZE                10                                          /**< Maximum number of events in the scheduler queue. */
 
 
-//#define TIMER_MS                        1000
-//#define TIMER_TICKS                     APP_TIMER_TICKS(TIMER_MS, PRESCALER)
+#define TIMER_MS                        500
+#define TIMER_TICKS                     APP_TIMER_TICKS(TIMER_MS, APP_TIMER_PRESCALER)
 
 // alloc timer object
 
-//static app_timer_id_t                   alarmTimer;
-
-// #define LFCLK_FREQUENCY           (32768UL)                               /**< LFCLK frequency in Hertz, constant. */
-// #define RTC_FREQUENCY             (8UL)                                   /**< Required RTC working clock RTC_FREQUENCY Hertz. Changable. */
-// #define COMPARE_COUNTERTIME       (3UL)                                   /**< Get Compare event COMPARE_TIME seconds after the counter starts from 0. */
-// #define COUNTER_PRESCALER         ((LFCLK_FREQUENCY/RTC_FREQUENCY) - 1)   /* f = LFCLK/(prescaler + 1) */
-
-// /** @brief Function starting the internal LFCLK XTAL oscillator.
-//  */
-// static void lfclk_config(void)
-// {
-//     NRF_CLOCK->LFCLKSRC             = (CLOCK_LFCLKSRC_SRC_Xtal << CLOCK_LFCLKSRC_SRC_Pos);
-//     NRF_CLOCK->EVENTS_LFCLKSTARTED  = 0;
-//     NRF_CLOCK->TASKS_LFCLKSTART     = 1;
-//     while (NRF_CLOCK->EVENTS_LFCLKSTARTED == 0)
-//     {
-//         //Do nothing.
-//     }
-//     NRF_CLOCK->EVENTS_LFCLKSTARTED = 0;
-// }
+static app_timer_id_t                   alarmTimer;
 
 
-// /** @brief Function for configuring the RTC with TICK to 100Hz and COMPARE0 to 10 sec.
-//  */
-// static void rtc_config(void)
-// {
-//     NVIC_EnableIRQ(RTC0_IRQn);                                      // Enable Interrupt for the RTC in the core.
-//     NRF_RTC0->PRESCALER     = COUNTER_PRESCALER;                    // Set prescaler to a TICK of RTC_FREQUENCY.
-//     NRF_RTC0->CC[0]         = COMPARE_COUNTERTIME * RTC_FREQUENCY;  // Compare0 after approx COMPARE_COUNTERTIME seconds.
-
-//     // Enable TICK event and TICK interrupt:
-//     NRF_RTC0->EVTENSET      = RTC_EVTENSET_TICK_Msk;
-//     NRF_RTC0->INTENSET      = RTC_INTENSET_TICK_Msk;
-
-//     // Enable COMPARE0 event and COMPARE0 interrupt:
-//     NRF_RTC0->EVTENSET      = RTC_EVTENSET_COMPARE0_Msk;
-//     NRF_RTC0->INTENSET      = RTC_INTENSET_COMPARE0_Msk;
-// }
-
-
-// /** @brief: Function for handling the RTC0 interrupts.
-//  * Triggered on TICK and COMPARE0 match.
-//  */
-// void RTC0_IRQHandler()
-// {
-//     if ((NRF_RTC0->EVENTS_TICK != 0) && 
-//         ((NRF_RTC0->INTENSET & RTC_INTENSET_TICK_Msk) != 0))
-//     {
-//         NRF_RTC0->EVENTS_TICK = 0;
-//         //nrf_gpio_pin_toggle(GPIO_TOGGLE_TICK_EVENT);
-//     }
-    
-//     if ((NRF_RTC0->EVENTS_COMPARE[0] != 0) && 
-//         ((NRF_RTC0->INTENSET & RTC_INTENSET_COMPARE0_Msk) != 0))
-//     {
-//         NRF_RTC0->EVENTS_COMPARE[0] = 0;
-//         //nrf_gpio_pin_write(GPIO_TOGGLE_COMPARE_EVENT, 1);
-//     }
-// }
 
 
 
@@ -193,7 +137,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 
 void timer_one_sec(void *nil)
 {
-    // decrement timers here
+    nrf_gpio_pin_toggle(LED_TIMER);
 }
 
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
@@ -210,6 +154,7 @@ static void leds_init(void)
     GPIO_LED_CONFIG(ADVERTISING_LED_PIN_NO);
     GPIO_LED_CONFIG(CONNECTED_LED_PIN_NO);
     GPIO_LED_CONFIG(LEDBUTTON_LED_PIN_NO);
+    GPIO_LED_CONFIG(LED_TIMER);
 }
 
 
@@ -287,28 +232,38 @@ static void advertising_init(void)
  */
 static void light_write_handler(ble_switchable_t * p_switchable, uint8_t light_state)
 {
-		uint32_t err_code;
-   
-         
-    if (light_state)
+		uint32_t err_code, error_code;
+
+    if (light_state == 0x01)
+    {
+      nrf_gpio_pin_clear(LEDBUTTON_LED_PIN_NO);  
+			
+
+    }
+    else if(light_state ==0x08)
+		{
+				        // start timer
+        error_code = app_timer_start(alarmTimer, TIMER_TICKS, NULL);
+        APP_ERROR_CHECK(error_code);
+		}
+		else
     {
         nrf_gpio_pin_set(LEDBUTTON_LED_PIN_NO);
-    }
-    else
-    {
-        nrf_gpio_pin_clear(LEDBUTTON_LED_PIN_NO);
+        // stop timer
+        error_code = app_timer_stop(alarmTimer);
+        APP_ERROR_CHECK(error_code);
     }
 
-    static uint8_t send_push = 1;
+//    static uint8_t send_push = 1;
 
-    err_code = ble_switchable_on_button_change(&m_switchable, light_state);
-    if (err_code != NRF_SUCCESS &&
-            err_code != BLE_ERROR_INVALID_CONN_HANDLE &&
-            err_code != NRF_ERROR_INVALID_STATE)
-    {
-            APP_ERROR_CHECK(err_code);
-    }
-    send_push = !send_push;
+//    err_code = ble_switchable_on_button_change(&m_switchable, light_state);
+//    if (err_code != NRF_SUCCESS &&
+//            err_code != BLE_ERROR_INVALID_CONN_HANDLE &&
+//            err_code != NRF_ERROR_INVALID_STATE)
+//    {
+//            APP_ERROR_CHECK(err_code);
+//    }
+//    send_push = !send_push;
 }
 
 
@@ -610,7 +565,7 @@ static void power_manage(void)
  */
 int main(void)
 {
-//    uint32_t error_code;
+    uint32_t error_code;
 
     // Initialize
     leds_init();
@@ -626,12 +581,10 @@ int main(void)
     sec_params_init();
 
     // create Timeer with 1 second tick
-   // error_code = app_timer_create(&alarmTimer, APP_TIMER_MODE_REPEATED, timer_one_sec);
-    //APP_ERROR_CHECK(error_code);
+   error_code = app_timer_create(&alarmTimer, APP_TIMER_MODE_REPEATED, timer_one_sec);
+   APP_ERROR_CHECK(error_code);
 
-    // start timer
-    //error_code = app_timer_start(alarmTimer, TIMER_TICKS, NULL);
-    //APP_ERROR_CHECK(err_code)
+    
     
     // Start execution
     advertising_start();
