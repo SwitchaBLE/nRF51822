@@ -37,7 +37,7 @@
 
 
 #define WAKEUP_BUTTON_PIN               EVAL_BOARD_BUTTON_0                            /**< Button used to wake up the application. */
-#define LEDBUTTON_LED_PIN_NO            21
+#define LEDBUTTON_LED_PIN_NO            5
 #define LEDBUTTON_BUTTON_PIN_NO         22
 #define LED_TIMER                       23
 
