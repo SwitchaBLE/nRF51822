@@ -237,8 +237,8 @@ static void light_write_handler(ble_switchable_t * p_switchable, uint8_t light_s
 {
 	uint32_t err_code, error_code;
 
-    // turn light on
-    if (light_state == 0x01)
+    // turn light off
+    if (light_state == 0x00)
     { 
         if (is_light_pulsed) 
         {
@@ -248,13 +248,44 @@ static void light_write_handler(ble_switchable_t * p_switchable, uint8_t light_s
             APP_ERROR_CHECK(error_code);  
         }
 
-        nrf_gpio_pin_clear(LEDBUTTON_LED_PIN_NO);
-        nrf_gpio_pin_clear(LED_TIMER);  
+        nrf_gpio_pin_set(LEDBUTTON_LED_PIN_NO);
+        nrf_gpio_pin_set(LED_TIMER);  
 			
     }
-    // pulse light
-    else if(light_state == 0x08)
-	{
+		// turn light on
+		else if (light_state == 0x01)
+		{
+			if (is_light_pulsed)
+			{
+				is_light_pulsed = false;
+				// stop timer
+				error_code = app_timer_stop(alarmTimer);
+				APP_ERROR_CHECK(error_code);
+			}
+			
+			nrf_gpio_pin_clear(LEDBUTTON_LED_PIN_NO);
+			nrf_gpio_pin_clear(LED_TIMER);
+		}
+		
+		// toggle light
+		else if (light_state == 0x02)
+		{
+			if (is_light_pulsed)
+			{
+				is_light_pulsed = false;
+				// stop timer
+				error_code = app_timer_stop(alarmTimer);
+				APP_ERROR_CHECK(error_code);
+			}
+
+			nrf_gpio_pin_toggle(LEDBUTTON_LED_PIN_NO);
+			nrf_gpio_pin_toggle(LED_TIMER);
+
+		}
+		
+    // strobe light
+    else if (light_state == 0x08)
+		{
         if (!is_light_pulsed) {
             is_light_pulsed = true;
             // start timer
@@ -262,9 +293,9 @@ static void light_write_handler(ble_switchable_t * p_switchable, uint8_t light_s
             APP_ERROR_CHECK(error_code);  
         }
         
-	}
-	else
-    {
+		}
+		else
+			{
         
         if (is_light_pulsed) 
         {
